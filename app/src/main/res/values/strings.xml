@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Looper</string>
+    <string name="stop">Stop</string>
+    <string name="undo">Undo</string>
+    <string name="new_loop">New</string>
+    <string name="save">Save</string>
+    <string name="loops">Loops</string>
+    <string name="sync">Sync</string>
+    <string name="layers">Layers</string>
+    <string name="headphones_tip">Tip: wear wired headphones while adding layers, otherwise the mic re-records the loop coming out of the speaker. Bluetooth headphones add a lot of delay.</string>
+    <string name="search_loops">Search loops</string>
+    <string name="no_loops">No saved loops yet.</string>
+</resources>
