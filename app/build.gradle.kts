@@ -10,8 +10,8 @@ android {
         applicationId = "io.github.ejarmand.looper"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.3-pitch"
     }
 
     buildTypes {
@@ -32,4 +32,7 @@ android {
     }
 }
 
-// Intentionally no dependencies: the app uses only the Android framework.
+// The app itself has no dependencies; it uses only the Android framework.
+dependencies {
+    testImplementation("junit:junit:4.13.2")
+}

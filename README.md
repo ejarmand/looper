@@ -24,7 +24,7 @@ The big circle is the pedal. Each tap does the next thing:
 - **Stop**: stops playback. A layer you're recording is kept.
 - **Undo**: throws away the layer in progress, or the last layer.
 - **New** / **Save** / **Loops**: start a fresh loop, save the current one, or browse and search saved loops. Long-press a saved loop to rename, export, or delete it.
-- **Layers**: mute or delete individual layers.
+- **Layers**: mute or delete individual layers, or tap **Pitch** to add a pitch-shifted copy of a layer (up or down a third, fourth, fifth, or octave) as a new layer. Instant harmonies. Timing stays locked to the loop.
 - **Sync**: the app measures audio latency so new layers line up with what you heard. If layers still come out early or late on your phone, nudge them here.
 - A Bluetooth page-turner pedal or keyboard works the pedal too (Space, Page Up/Down, or the headset button).
 

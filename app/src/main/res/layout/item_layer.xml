@@ -20,6 +20,13 @@
         android:layout_height="wrap_content" />
 
     <Button
+        android:id="@+id/pitch"
+        style="?android:attr/borderlessButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pitch" />
+
+    <Button
         android:id="@+id/delete"
         style="?android:attr/borderlessButtonStyle"
         android:layout_width="wrap_content"

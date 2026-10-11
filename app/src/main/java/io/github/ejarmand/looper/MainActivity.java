@@ -41,6 +41,11 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     private static final int REQ_MIC = 1;
     private static final int REQ_OPEN = 2;
     private static final String PREF_SYNC_MS = "sync_ms";
+    private static final String[] INTERVAL_NAMES = {
+            "up an octave", "up a fifth", "up a fourth", "up a major third", "up a minor third",
+            "down a minor third", "down a major third", "down a fourth", "down a fifth",
+            "down an octave"};
+    private static final int[] INTERVAL_SEMITONES = {12, 7, 5, 4, 3, -3, -4, -5, -7, -12};
     // Phones tend to under-report their delay, so allow a lot more pull-earlier than push-later.
     private static final int SYNC_MIN_MS = -500;
     private static final int SYNC_MAX_MS = 150;
@@ -278,6 +283,34 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                 .show();
     }
 
+    /** Adds a pitch-shifted copy of a layer as a new layer, e.g. an instant harmony. */
+    private void showPitchDialog(Layer source) {
+        new AlertDialog.Builder(this)
+                .setTitle("Add a pitched copy")
+                .setItems(INTERVAL_NAMES, (d, which) -> pitchLayer(
+                        source, INTERVAL_SEMITONES[which], INTERVAL_NAMES[which]))
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    private void pitchLayer(Layer source, int semitones, String name) {
+        float[] samples = source.toArray();
+        Toast.makeText(this, "Pitching " + name + "…", Toast.LENGTH_SHORT).show();
+        io.execute(() -> {
+            try {
+                Layer shifted = Layer.fromArray(PitchShifter.shiftLoop(samples, semitones));
+                shifted.label = name;
+                handler.post(() -> {
+                    // Skip it if the loop was cleared or replaced while we worked.
+                    if (engine.layers().contains(source)) engine.addLayer(shifted);
+                });
+            } catch (OutOfMemoryError e) {
+                handler.post(() -> Toast.makeText(
+                        this, "Loop is too long to pitch-shift.", Toast.LENGTH_LONG).show());
+            }
+        });
+    }
+
     private void showSyncDialog() {
         int current = prefs.getInt(PREF_SYNC_MS, 0);
         View view = LayoutInflater.from(this).inflate(android.R.layout.simple_list_item_1, null);
@@ -367,10 +400,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         for (int i = 0; i < layers.size(); i++) {
             Layer layer = layers.get(i);
             View row = inflater.inflate(R.layout.item_layer, layersView, false);
-            boolean recording = engine.state() == AudioEngine.State.OVERDUBBING
-                    && i == layers.size() - 1;
             String label = i == 0 ? "Layer 1 (base)" : "Layer " + (i + 1);
-            if (recording) label += " (recording)";
+            if (layer.label != null) label += " · " + layer.label;
+            if (layer == engine.overdubLayer()) label += " (recording)";
             ((TextView) row.findViewById(R.id.label)).setText(label);
             Button mute = row.findViewById(R.id.mute);
             mute.setText(layer.muted ? "Unmute" : "Mute");
@@ -378,6 +410,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
             Button delete = row.findViewById(R.id.delete);
             delete.setEnabled(!busy);
             delete.setOnClickListener(v -> engine.removeLayer(layer));
+            Button pitch = row.findViewById(R.id.pitch);
+            pitch.setEnabled(layer != engine.overdubLayer());
+            pitch.setOnClickListener(v -> showPitchDialog(layer));
             row.setAlpha(layer.muted ? 0.5f : 1f);
             layersView.addView(row);
         }

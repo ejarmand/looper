@@ -91,6 +91,7 @@ final class LoopStore {
                 writeWav(os, layers.get(i), sampleRate);
             }
             p.setProperty("muted." + i, Boolean.toString(layers.get(i).muted));
+            if (layers.get(i).label != null) p.setProperty("label." + i, layers.get(i).label);
         }
         writeMeta(tmp, info, p);
         deleteRecursive(dir);
@@ -111,6 +112,7 @@ final class LoopStore {
             }
             if (info.sampleRate != targetRate) layer = resample(layer, info.sampleRate, targetRate);
             layer.muted = Boolean.parseBoolean(p.getProperty("muted." + i, "false"));
+            layer.label = p.getProperty("label." + i);
             layers.add(layer);
         }
         // Rounding during resampling can leave layers off by a frame; trim to the shortest.
@@ -121,6 +123,7 @@ final class LoopStore {
             if (l.length != length) {
                 Layer trimmed = new Layer(l.chunks, length);
                 trimmed.muted = l.muted;
+                trimmed.label = l.label;
                 layers.set(i, trimmed);
             }
         }

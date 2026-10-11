@@ -84,7 +84,7 @@ final class AudioEngine {
     // Owned by the audio thread while it runs; by the main thread otherwise.
     private final ArrayList<float[]> recordChunks = new ArrayList<>();
     private int recordLength;
-    private Layer overdub;
+    private volatile Layer overdub;
     // The layer being written. Outlives `overdub` briefly so a finished layer can fade out.
     private Layer writing;
     private long writeShift;
@@ -202,6 +202,19 @@ final class AudioEngine {
         revision++;
         if (layers.isEmpty()) clear();
         else notifyState();
+    }
+
+    /** The layer being recorded right now, if any. */
+    Layer overdubLayer() {
+        return overdub;
+    }
+
+    /** Adds a finished layer (e.g. a pitch-shifted copy). Safe while playing. */
+    void addLayer(Layer layer) {
+        if (layer.length != loopLength || layers.isEmpty()) return;
+        layers.add(layer);
+        revision++;
+        notifyState();
     }
 
     void setMuted(Layer layer, boolean muted) {

@@ -12,6 +12,8 @@ final class Layer {
     final float[][] chunks;
     final int length;
     volatile boolean muted;
+    /** How this layer was made, e.g. "up a major third", or null for a recorded layer. */
+    String label;
 
     Layer(int length) {
         this(allocate(length), length);
@@ -26,6 +28,24 @@ final class Layer {
         float[][] chunks = new float[(length + CHUNK - 1) / CHUNK][];
         for (int i = 0; i < chunks.length; i++) chunks[i] = new float[CHUNK];
         return chunks;
+    }
+
+    static Layer fromArray(float[] samples) {
+        Layer layer = new Layer(samples.length);
+        for (int c = 0; c < layer.chunks.length; c++) {
+            int start = c * CHUNK;
+            System.arraycopy(samples, start, layer.chunks[c], 0, Math.min(CHUNK, samples.length - start));
+        }
+        return layer;
+    }
+
+    float[] toArray() {
+        float[] out = new float[length];
+        for (int c = 0; c < chunks.length; c++) {
+            int start = c * CHUNK;
+            System.arraycopy(chunks[c], 0, out, start, Math.min(CHUNK, length - start));
+        }
+        return out;
     }
 
     float get(int i) {
