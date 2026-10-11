@@ -32,7 +32,7 @@ The big circle is the pedal. Each tap does the next thing:
 - **Scrub bar** / **⏮ Start**: jump anywhere in the loop, while paused or playing.
 - **Undo**: throws away the layer in progress, or the last layer.
 - **New** / **Save** / **Loops**: start a fresh loop, save the current one, or browse and search saved loops. Long-press a saved loop to rename, export, or delete it.
-- **Layers**: mute or delete individual layers, or tap **Pitch** to add a pitch-shifted copy of a layer (up or down a third, fourth, fifth, or octave) as a new layer. Instant harmonies. Timing stays locked to the loop.
+- **Layers**: mute or delete individual layers, or tap **Pitch** to add a pitch-shifted copy of a layer as a new layer. Pick up or down and how many semitones (1–12, each labeled: major 3rd, perfect 5th, octave…); a small keyboard shows the move as if your note were middle C. Timing stays locked to the loop. Shifts are fixed intervals, not key-aware, so thirds can land out of key (see [#1](https://github.com/ejarmand/looper/issues/1)).
 - **Sync**: the app measures audio latency so new layers line up with what you heard. If layers still come out early or late on your phone, nudge them here.
 - A Bluetooth page-turner pedal or keyboard works the pedal too (Space, Page Up/Down, or the headset button).
 

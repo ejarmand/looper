@@ -21,6 +21,8 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.NumberPicker;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,11 +43,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     private static final int REQ_MIC = 1;
     private static final int REQ_OPEN = 2;
     private static final String PREF_SYNC_MS = "sync_ms";
-    private static final String[] INTERVAL_NAMES = {
-            "up an octave", "up a fifth", "up a fourth", "up a major third", "up a minor third",
-            "down a minor third", "down a major third", "down a fourth", "down a fifth",
-            "down an octave"};
-    private static final int[] INTERVAL_SEMITONES = {12, 7, 5, 4, 3, -3, -4, -5, -7, -12};
+    private static final String PREF_PITCH_STEPS = "pitch_steps";
     // Phones tend to under-report their delay, so allow a lot more pull-earlier than push-later.
     private static final int SYNC_MIN_MS = -500;
     private static final int SYNC_MAX_MS = 150;
@@ -310,14 +308,52 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                 .show();
     }
 
-    /** Adds a pitch-shifted copy of a layer as a new layer, e.g. an instant harmony. */
+    /**
+     * Adds a pitch-shifted copy of a layer as a new layer, e.g. an instant harmony. You pick
+     * how many semitones and which way; a keyboard shows it as a move away from middle C.
+     */
     private void showPitchDialog(Layer source) {
+        View view = LayoutInflater.from(this).inflate(R.layout.dialog_pitch, null);
+        RadioGroup direction = view.findViewById(R.id.direction);
+        NumberPicker steps = view.findViewById(R.id.steps);
+        KeyboardView keyboard = view.findViewById(R.id.keyboard);
+        TextView summary = view.findViewById(R.id.summary);
+
+        String[] names = new String[Interval.MAX_STEPS];
+        for (int i = 1; i <= Interval.MAX_STEPS; i++) names[i - 1] = i + " \u00B7 " + Interval.name(i);
+        steps.setMinValue(1);
+        steps.setMaxValue(Interval.MAX_STEPS);
+        steps.setDisplayedValues(names);
+        steps.setWrapSelectorWheel(false);
+
+        int last = prefs.getInt(PREF_PITCH_STEPS, 4);
+        steps.setValue(Math.max(1, Math.min(Interval.MAX_STEPS, Math.abs(last))));
+        direction.check(last < 0 ? R.id.down : R.id.up);
+
+        Runnable update = () -> {
+            int semitones = chosenSemitones(direction, steps);
+            keyboard.setTarget(semitones);
+            summary.setText(String.format(Locale.US, "%s (%+d semitones)\nlike C \u2192 %s",
+                    Interval.label(semitones), semitones, Interval.noteFromC(semitones)));
+        };
+        steps.setOnValueChangedListener((p, oldVal, newVal) -> update.run());
+        direction.setOnCheckedChangeListener((g, id) -> update.run());
+        update.run();
+
         new AlertDialog.Builder(this)
                 .setTitle("Add a pitched copy")
-                .setItems(INTERVAL_NAMES, (d, which) -> pitchLayer(
-                        source, INTERVAL_SEMITONES[which], INTERVAL_NAMES[which]))
+                .setView(view)
+                .setPositiveButton("Add layer", (d, w) -> {
+                    int semitones = chosenSemitones(direction, steps);
+                    prefs.edit().putInt(PREF_PITCH_STEPS, semitones).apply();
+                    pitchLayer(source, semitones, Interval.label(semitones));
+                })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    private static int chosenSemitones(RadioGroup direction, NumberPicker steps) {
+        return direction.getCheckedRadioButtonId() == R.id.down ? -steps.getValue() : steps.getValue();
     }
 
     private void pitchLayer(Layer source, int semitones, String name) {
