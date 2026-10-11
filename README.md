@@ -19,9 +19,10 @@ The big circle is the pedal. Each tap does the next thing:
 | Rec        | Close the loop (sets its length) and start playing |
 | Playing    | Start recording a new layer over the loop         |
 | Layer N    | Finish the layer (it keeps playing)               |
-| Stopped    | Play                                              |
+| Paused     | Play from where you paused                        |
 
-- **Stop**: stops playback. A layer you're recording is kept.
+- **Pause**: pauses playback where it is. A layer you're recording is kept.
+- **Scrub bar** / **⏮ Start**: jump anywhere in the loop, while paused or playing.
 - **Undo**: throws away the layer in progress, or the last layer.
 - **New** / **Save** / **Loops**: start a fresh loop, save the current one, or browse and search saved loops. Long-press a saved loop to rename, export, or delete it.
 - **Layers**: mute or delete individual layers, or tap **Pitch** to add a pitch-shifted copy of a layer (up or down a third, fourth, fifth, or octave) as a new layer. Instant harmonies. Timing stays locked to the loop.
@@ -30,7 +31,7 @@ The big circle is the pedal. Each tap does the next thing:
 
 Use wired headphones when adding layers. Otherwise the mic re-records the loop coming out of the speaker. Bluetooth headphones add a lot of delay.
 
-The loop stops when you leave the app, but it stays in memory until you close the app.
+The loop pauses when you leave the app and picks up where it was when you come back (until the app is closed).
 
 ## Building
 

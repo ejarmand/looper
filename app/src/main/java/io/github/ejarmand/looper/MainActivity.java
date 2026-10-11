@@ -66,6 +66,9 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
     private TextView diagnosticsView;
     private PedalView pedal;
     private Button stopButton;
+    private Button toStartButton;
+    private SeekBar scrub;
+    private boolean scrubbing;
     private Button undoButton;
     private Button saveButton;
     private LinearLayout layersView;
@@ -95,12 +98,36 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
         diagnosticsView = findViewById(R.id.diagnostics);
         pedal = findViewById(R.id.pedal);
         stopButton = findViewById(R.id.stop);
+        toStartButton = findViewById(R.id.to_start);
+        scrub = findViewById(R.id.scrub);
         undoButton = findViewById(R.id.undo);
         saveButton = findViewById(R.id.save);
         layersView = findViewById(R.id.layers);
 
         pedal.setOnClickListener(v -> onPedal());
         stopButton.setOnClickListener(v -> engine.stop());
+        toStartButton.setOnClickListener(v -> {
+            engine.seek(0);
+            renderPedal();
+        });
+        scrub.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
+                if (!fromUser) return;
+                engine.seek(progress);
+                renderPedal();
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar bar) {
+                scrubbing = true;
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar bar) {
+                scrubbing = false;
+            }
+        });
         undoButton.setOnClickListener(v -> engine.undo());
         saveButton.setOnClickListener(v -> onSave());
         findViewById(R.id.new_loop).setOnClickListener(v -> confirmDiscard(this::newLoop));
@@ -368,6 +395,12 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                 || s == AudioEngine.State.OVERDUBBING;
     }
 
+    private boolean canSeek() {
+        AudioEngine.State s = engine.state();
+        return engine.loopLength() > 0
+                && (s == AudioEngine.State.PLAYING || s == AudioEngine.State.STOPPED);
+    }
+
     private boolean isDirty() {
         return !engine.layers().isEmpty() && engine.revision() != savedRevision;
     }
@@ -378,6 +411,7 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
 
         nameView.setText((loopName != null ? loopName : "Untitled loop") + (isDirty() ? " •" : ""));
         stopButton.setEnabled(isRunning());
+        toStartButton.setEnabled(canSeek());
         undoButton.setEnabled(s != AudioEngine.State.EMPTY);
         saveButton.setEnabled(!busy && !engine.layers().isEmpty());
 
@@ -441,10 +475,13 @@ public final class MainActivity extends Activity implements AudioEngine.Listener
                 timeView.setText(formatTime(pos) + " / " + formatTime(length));
                 break;
             case STOPPED:
-                pedal.show(0xFF1E88E5, 0f, "STOPPED", "tap to play");
-                timeView.setText(formatTime(length));
+                pedal.show(0xFF1E88E5, progress, "PAUSED", "tap to play");
+                timeView.setText(formatTime(pos) + " / " + formatTime(length));
                 break;
         }
+        scrub.setEnabled(canSeek());
+        if (scrub.getMax() != Math.max(1, length)) scrub.setMax(Math.max(1, length));
+        if (!scrubbing) scrub.setProgress(length > 0 ? pos : 0);
         renderDiagnostics();
     }
 

@@ -53,14 +53,23 @@ final class AudioEngine {
     private static final int CMD_START_OVERDUB = 2;
     private static final int CMD_FINISH_OVERDUB = 3;
     private static final int CMD_CANCEL_OVERDUB = 4;
+    private static final int CMD_SEEK = 5;
 
     private static final class Command {
         final int type;
         final Layer layer;
+        final int value;
 
         Command(int type, Layer layer) {
             this.type = type;
             this.layer = layer;
+            this.value = 0;
+        }
+
+        Command(int type, int value) {
+            this.type = type;
+            this.layer = null;
+            this.value = value;
         }
     }
 
@@ -74,6 +83,8 @@ final class AudioEngine {
     private volatile State state = State.EMPTY;
     private volatile int loopLength;
     private volatile int position;
+    // Where playback picks up when un-paused.
+    private volatile int resumePosition;
     private volatile int revision;
     private volatile int syncOffsetFrames;
     private volatile boolean running;
@@ -172,12 +183,14 @@ final class AudioEngine {
         }
     }
 
-    /** Stops playback. A recording or overdub in progress is kept. */
+    /** Pauses playback where it is. A recording or overdub in progress is kept. */
     void stop() {
         stopThread();
         writing = null;
         if (state == State.RECORDING) {
             finishRecording();
+            resumePosition = 0;
+            position = 0;
         } else if (state == State.OVERDUBBING) {
             overdub = null;
             revision++;
@@ -202,6 +215,19 @@ final class AudioEngine {
         revision++;
         if (layers.isEmpty()) clear();
         else notifyState();
+    }
+
+    /** Jumps to a spot in the loop. Ignored while recording or adding a layer. */
+    void seek(int frame) {
+        int length = loopLength;
+        if (length == 0) return;
+        frame = Math.max(0, Math.min(length - 1, frame));
+        if (state == State.STOPPED) {
+            resumePosition = frame;
+            position = frame;
+        } else if (state == State.PLAYING) {
+            commands.add(new Command(CMD_SEEK, frame));
+        }
     }
 
     /** The layer being recorded right now, if any. */
@@ -232,6 +258,7 @@ final class AudioEngine {
         writing = null;
         loopLength = 0;
         position = 0;
+        resumePosition = 0;
         revision++;
         setState(State.EMPTY);
     }
@@ -359,7 +386,7 @@ final class AudioEngine {
                     }
                 }
                 if (resetOrigin) {
-                    origin = outFrames;
+                    origin = outFrames - resumePosition;
                     resetOrigin = false;
                 }
                 Command c;
@@ -370,6 +397,15 @@ final class AudioEngine {
                 if (w < 0) throw new IllegalStateException("speaker write failed: " + w);
                 inFrames += n;
                 outFrames += w;
+            }
+            // Pause where the listener actually was, not where we'd written ahead to.
+            State s = state;
+            int length = loopLength;
+            if ((s == State.PLAYING || s == State.OVERDUBBING) && length > 0) {
+                long heard = (track.getPlaybackHeadPosition() & 0xFFFFFFFFL) - origin;
+                int p = heard < 0 ? 0 : (int) Math.floorMod(heard, (long) length);
+                resumePosition = p;
+                position = p;
             }
         } catch (RuntimeException e) {
             Log.e(TAG, "audio thread failed", e);
@@ -453,6 +489,12 @@ final class AudioEngine {
                 fadeOutLeft = OVERDUB_FADE_FRAMES;
                 revision++;
                 setState(State.PLAYING);
+                break;
+            case CMD_SEEK:
+                if (state != State.PLAYING) return;
+                writing = null; // Drop any layer fade-out; its mapping assumed the old origin.
+                origin = outFrames - c.value;
+                position = c.value;
                 break;
             case CMD_CANCEL_OVERDUB:
                 if (state != State.OVERDUBBING) return;

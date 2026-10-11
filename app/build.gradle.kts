@@ -10,8 +10,8 @@ android {
         applicationId = "io.github.ejarmand.looper"
         minSdk = 26
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.3-pitch"
+        versionCode = 5
+        versionName = "1.4-pause"
     }
 
     buildTypes {

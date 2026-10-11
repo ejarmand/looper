@@ -45,6 +45,14 @@
             android:textColor="#AAAAAA"
             android:textSize="18sp" />
 
+        <SeekBar
+            android:id="@+id/scrub"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp" />
+
         <TextView
             android:id="@+id/diagnostics"
             android:layout_width="match_parent"
@@ -64,6 +72,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/to_start"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_weight="1"
+                android:text="@string/to_start"
+                android:textSize="18sp" />
 
             <Button
                 android:id="@+id/stop"
