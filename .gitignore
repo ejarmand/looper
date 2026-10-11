@@ -7,3 +7,4 @@ local.properties
 .diagnostics/
 .signing/
 *.swp
+.litget/
