@@ -75,3 +75,7 @@ git tag v1.4.1 && git push origin v1.4.1
 ```
 
 The version name comes from the tag; the version code is the commit count. The signing key lives in `.signing/` (gitignored) and in the repo secrets `LOOPER_KEYSTORE_BASE64` / `LOOPER_KEYSTORE_PASSWORD`. **Back up `.signing/` somewhere safe.** If the key is lost, future releases can't update installed copies of the app.
+
+## License
+
+[MIT](LICENSE)
