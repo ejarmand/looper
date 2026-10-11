@@ -2,9 +2,16 @@
 
 # Looper
 
+## human preface
+Fully vibe coded with claude. Just wanted something with loop-pedal like functionality.
+
+Added some random stuff like pitch shifting. My main use case is trying to practice/play with
+vocal harmonies.
+
+## beyond here lies vibeslop
+
 A bare-bones loop pedal for Android. Record a loop, play it back, layer over it.
 
-- No ads, no accounts, no analytics, no in-app purchases
 - One permission: the microphone. The app does not request `INTERNET`, so it cannot send data anywhere.
 - No third-party libraries. The app uses only the Android framework (APK is ~75 KB).
 - Loops are saved in app-private storage on the phone. Use **Export** if you want a WAV file in `Music/Looper`.
